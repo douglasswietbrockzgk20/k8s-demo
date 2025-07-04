@@ -17,7 +17,7 @@ jobs:
         with:
           authkey: ${{ secrets.AUTHKEY }}
           args: ${{ secrets.TAILSCALE_ARGS }}
-          tailscaled-args: "--tun=userspace-networking"
+          # tailscaled-args: "--tun=userspace-networking"
           tags: tag:ci
 
       - name: tailscale status
