@@ -1,4 +1,4 @@
-name: Tailscale Demo
+name: Tailscale K3d Demo
 
 on:
   push:
