@@ -1,0 +1,45 @@
+name: Tailscale Demo
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install ping
+        run: sudo apt-get update && sudo apt-get install -y iputils-ping
+
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        # https://github.com/tailscale/github-action
+        with:
+          authkey: ${{ secrets.AUTHKEY }}
+          args: ${{ secrets.TAILSCALE_ARGS }}
+          # tailscaled-args: "--tun=userspace-networking"
+          tags: tag:ci
+
+      - name: tailscale status
+        run: tailscale status
+
+      - name: display tailscale ip
+        id: tailscale_ip
+        run: echo "TS_IP=$(ip -f inet addr show tailscale0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')" >> $GITHUB_ENV
+      
+      - name: install k3d
+        run: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+      - name: install kubectl
+        run: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - name: make kubectl executable
+        run: install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      - name: remove k3d cluster
+        run: k3d cluster delete multiserver
+      - name: create k3d cluster
+        run: k3d cluster create multiserver --servers 1 --agents 1 --wait --api-port 0.0.0.0:6443 --k3s-arg "--tls-san=$TS_IP@server:0"
+      - name: patch file
+        run: |
+          sed -i "s|server: https://0.0.0.0:6443|server: https://$TS_IP:6443|" $HOME/.kube/config
+      - name: check
+        run: |
+          kubectl get nodes
