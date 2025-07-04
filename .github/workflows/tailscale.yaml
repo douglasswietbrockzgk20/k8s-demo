@@ -20,27 +20,12 @@ jobs:
           # tailscaled-args: "--tun=userspace-networking"
           tags: tag:ci
 
-      - name: tailscale status
-        run: tailscale status
-
       - name: display tailscale ip
         run: echo $(ip -f inet addr show tailscale0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')
 
       - name: tailscale ping
         if: success() || failure()
         run: tailscale ping arm-us-east-1
-
-      - name: sleep 15s
-        run: sleep 15
-
-#     https://stackoverflow.com/a/58859404/2792414
-      - name: ping dns
-        if: success() || failure()
-        run: ping -c 10 arm-us-east-1
-
-      - name: ping ip
-        if: success() || failure()
-        run: ping -c 10 100.64.0.98
 
       # always logout
       - name: tailscale logout

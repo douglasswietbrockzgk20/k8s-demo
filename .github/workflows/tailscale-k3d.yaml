@@ -20,9 +20,6 @@ jobs:
           # tailscaled-args: "--tun=userspace-networking"
           tags: tag:ci
 
-      - name: tailscale status
-        run: tailscale status
-
       - name: display tailscale ip
         id: tailscale_ip
         run: echo "TS_IP=$(ip -f inet addr show tailscale0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')" >> $GITHUB_ENV
