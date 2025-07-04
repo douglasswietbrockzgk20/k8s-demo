@@ -1,0 +1,45 @@
+name: Tailscale Demo
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install ping
+        run: sudo apt-get update && sudo apt-get install -y iputils-ping
+
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        # https://github.com/tailscale/github-action
+        with:
+          authkey: ${{ secrets.AUTHKEY }}
+          args: ${{ secrets.TAILSCALE_ARGS }}
+          tailscaled-args: "--tun=userspace-networking"
+          tags: tag:ci
+
+      - name: tailscale status
+        run: tailscale status
+
+      - name: tailscale ping
+        if: success() || failure()
+        run: tailscale ping arm-us-east-1
+
+      - name: sleep 15s
+        run: sleep 15
+
+#     https://stackoverflow.com/a/58859404/2792414
+      - name: ping dns
+        if: success() || failure()
+        run: ping -c 10 arm-us-east-1
+
+      - name: ping ip
+        if: success() || failure()
+        run: ping -c 10 100.64.0.98
+
+      # always logout
+      - name: tailscale logout
+        if: success() || failure()
+        run: tailscale logout
